@@ -9,28 +9,26 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const className = formData.get('className') as string;
+    const formName = formData.get('form') as string;
 
-    if (!file || !className) {
-      return NextResponse.json({ error: 'Missing file or class name' }, { status: 400 });
+    if (!file || !className || !formName) {
+      return NextResponse.json({ error: 'Missing file, form, or class name' }, { status: 400 });
     }
 
-    // Convert file to buffer and read it with XLSX
     const buffer = Buffer.from(await file.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const rows: any[] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-    // Create the Class if it doesn't exist
+    // Create the Class with the Form assigned
     const classRoom = await prisma.classRoom.upsert({
       where: { name: className },
-      update: {},
-      create: { name: className },
+      update: { form: formName },
+      create: { name: className, form: formName },
     });
 
-    // Insert students from the Excel rows
     let addedCount = 0;
     for (const row of rows) {
-      // Look for columns exactly named 'studentId' and 'name'
       if (row.studentId && row.name) {
         await prisma.student.upsert({
           where: { studentId: String(row.studentId) },
@@ -45,7 +43,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, message: `Successfully added ${addedCount} students to ${className}!` });
+    return NextResponse.json({ success: true, message: `Successfully added ${addedCount} students to ${formName} ${className}!` });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Failed to process file' }, { status: 500 });

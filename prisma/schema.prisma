@@ -7,36 +7,36 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model ClassRoom {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  students  Student[]
-  createdAt DateTime @default(now())
-}
-
-model Student {
-  id           String       @id @default(cuid())
-  studentId    String       @unique
-  name         String
-  classRoomId  String
-  classRoom    ClassRoom    @relation(fields: [classRoomId], references: [id], onDelete: Cascade)
-  enrollments  Enrollment[]
-}
-
-model Club {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  maxCapacity Int          @default(30)
-  enrollments Enrollment[]
-}
-
 model Admin {
   id       String @id @default(cuid())
   username String @unique
-  password String // In a production banking app you'd hash this, but for a simple school app we'll keep it plain for now
+  password String
 }
 
-model Enrollment {
+model ClassRoom {
+  id       String    @id @default(cuid())
+  name     String    @unique // e.g., "1 Amanah", "2 Bestari"
+  form     String    // e.g., "Form 1", "Form 2"
+  students Student[]
+}
+
+model Student {
+  id          String           @id @default(cuid())
+  studentId   String           @unique
+  name        String
+  classRoomId String
+  classRoom   ClassRoom        @relation(fields: [classRoomId], references: [id], onDelete: Cascade)
+  assignments ClubAssignment[]
+}
+
+model Club {
+  id          String           @id @default(cuid())
+  name        String           @unique // e.g., "Pengakap", "Kelab Bola Sepak"
+  category    String           // e.g., "Uniform Body", "Academic", "Sports"
+  assignments ClubAssignment[]
+}
+
+model ClubAssignment {
   id        String   @id @default(cuid())
   studentId String
   clubId    String
