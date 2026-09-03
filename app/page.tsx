@@ -1,149 +1,141 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Component, Search, X, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Users, LayoutList, ShieldCheck, GraduationCap } from "lucide-react";
 
-type StudentData = { id: string; name: string; form: string; class: string };
-type ClubData = { id: string; name: string; type: string; students: StudentData[] };
+export default function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-export default function Dashboard() {
-  const [clubs, setClubs] = useState<ClubData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedClub, setSelectedClub] = useState<ClubData | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const res = await fetch("/api/dashboard");
-        if (res.ok) {
-          const data = await res.json();
-          setClubs(data);
-        }
-      } catch (error) {
-        console.error("Failed to load clubs");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchDashboardData();
-  }, []);
-
-  const filteredClubs = clubs.filter(club => 
-    club.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    if (res.ok) {
+      router.push("/dashboard");
+    } else {
+      setError("Invalid username or password");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      
-      {/* Main Dashboard Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Club & Organization Overview</h1>
-            <p className="text-sm text-slate-500 mt-1">Select a club to view its assigned students.</p>
+    <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6 md:p-12 text-slate-800 selection:bg-purple-200">
+      <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+        
+        {/* Left Column: Branding & Features */}
+        <div className="flex flex-col justify-center">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-purple-600 w-12 h-12 rounded-xl flex items-center justify-center shadow-md shadow-purple-600/20">
+              <GraduationCap className="text-white w-7 h-7" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">SuPer COAS</h2>
+              <p className="text-sm font-semibold text-purple-600">SMK Sungai Puteri Club & Organization Assignment System</p>
+            </div>
           </div>
+
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight mb-6">
+            Welcome to <br />
+            <span className="text-purple-700">
+              SMK Sungai Puteri
+            </span>
+          </h1>
           
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search clubs..." 
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <p className="text-slate-500 text-lg mb-10 max-w-md leading-relaxed">
+            Streamline your school's co-curricular assignments with a modern digital solution designed to prevent duplicate enrollments.
+          </p>
+
+          {/* Feature Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+              <div className="bg-purple-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-purple-700">
+                <Users className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900 text-sm mb-1">Student Import</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">Upload class lists instantly via Excel integration.</p>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+              <div className="bg-purple-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-purple-700">
+                <LayoutList className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900 text-sm mb-1">Smart Allocation</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">Assign clubs efficiently while tracking capacity limits.</p>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+              <div className="bg-purple-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-purple-700">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900 text-sm mb-1">Data Integrity</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">Automated constraints prevent duplicate assignments.</p>
+            </div>
           </div>
         </div>
 
-        {/* Loading State or Clubs Grid */}
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20 text-purple-600">
-            <Loader2 className="w-8 h-8 animate-spin" />
-          </div>
-        ) : filteredClubs.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-slate-200 rounded-2xl">
-            <Component className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-lg font-medium text-slate-900">No clubs found</h3>
-            <p className="text-slate-500 mt-1 text-sm">Head over to the Clubs & Orgs module to create one.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredClubs.map((club) => (
-              <div 
-                key={club.id} 
-                onClick={() => setSelectedClub(club)}
-                className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer group"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="bg-purple-100 text-purple-700 text-xs font-bold px-3 py-1 rounded-full">
-                    {club.type}
-                  </div>
-                  <div className="bg-slate-50 text-slate-600 text-xs font-semibold px-3 py-1 rounded-lg border border-slate-100">
-                    {club.students.length} Students
-                  </div>
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-700 transition-colors">
-                  {club.name}
-                </h3>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {/* Student List Modal */}
-      {selectedClub && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+        {/* Right Column: Login Card */}
+        <div className="relative">
+          {/* Decorative background blur */}
+          <div className="absolute -inset-4 bg-purple-600/5 blur-2xl -z-10 rounded-full" />
+          
+          <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2 text-center">Sign In</h2>
+            <p className="text-sm text-slate-500 mb-8 text-center">Enter your teacher credentials to access COAS</p>
             
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <form onSubmit={handleLogin} className="flex flex-col gap-6">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">{selectedClub.name}</h2>
-                <p className="text-sm text-slate-500 mt-1">Student Enrollment List</p>
+                <label className="block text-sm font-semibold mb-2 text-slate-700">Username</label>
+                <input
+                  type="text"
+                  placeholder="Enter your username"
+                  className="bg-slate-50 border border-slate-200 text-slate-900 p-3.5 rounded-xl w-full outline-none focus:bg-white focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all placeholder:text-slate-400"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
               </div>
-              <button 
-                onClick={() => setSelectedClub(null)}
-                className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+              
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-slate-700">Password</label>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  className="bg-slate-50 border border-slate-200 text-slate-900 p-3.5 rounded-xl w-full outline-none focus:bg-white focus:ring-2 focus:ring-purple-600 focus:border-transparent transition-all placeholder:text-slate-400"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
 
-            <div className="overflow-y-auto p-6">
-              <table className="w-full text-left text-sm text-slate-600">
-                <thead className="text-xs text-slate-400 uppercase bg-slate-50 rounded-lg">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold rounded-l-lg">ID</th>
-                    <th className="px-4 py-3 font-semibold">Name</th>
-                    <th className="px-4 py-3 font-semibold">Form</th>
-                    <th className="px-4 py-3 font-semibold rounded-r-lg">Class</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedClub.students.length > 0 ? (
-                    selectedClub.students.map((student, idx) => (
-                      <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-slate-900">{student.id}</td>
-                        <td className="px-4 py-3">{student.name}</td>
-                        <td className="px-4 py-3">{student.form}</td>
-                        <td className="px-4 py-3">{student.class}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="px-4 py-8 text-center text-slate-400">
-                        No students assigned yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+              {error && (
+                <div className="bg-red-50 text-red-600 text-sm font-medium p-3 rounded-lg text-center border border-red-100">
+                  {error}
+                </div>
+              )}
+              
+              <button 
+                type="submit" 
+                className="mt-2 bg-purple-600 text-white font-semibold text-lg px-4 py-3.5 rounded-xl hover:bg-purple-700 active:scale-[0.98] transition-all shadow-md shadow-purple-600/20"
+              >
+                Sign In
+              </button>
+            </form>
+
+            <p className="text-xs text-slate-400 text-center mt-8">
+              Authorized school personnel only. Contact the system administrator for access issues.
+            </p>
           </div>
         </div>
-      )}
 
-    </div>
+      </div>
+    </main>
   );
 }
