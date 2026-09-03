@@ -16,9 +16,17 @@ export default function Navbar() {
   // Hide the navbar entirely on the login page (which is now "/")
   if (pathname === "/") return null;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsMobileMenuOpen(false);
-    router.push("/"); // Redirect to the new login page
+    
+    // 1. Tell the server to delete the cookie
+    await fetch("/api/logout", { method: "POST" });
+    
+    // 2. Push the user to the login page
+    router.push("/");
+    
+    // 3. Force Next.js to refresh so the middleware recognizes the cookie is gone
+    router.refresh(); 
   };
 
   const navLinkClass = (path: string) => {
