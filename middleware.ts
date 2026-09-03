@@ -3,22 +3,32 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const authCookie = request.cookies.get("auth_session");
-  const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+  const { pathname } = request.nextUrl;
 
-  // If there is no cookie and the user is NOT on the login page, redirect them to login
-  if (!authCookie && !isLoginPage) {
+  // 1. Allow public access to the login page and the login API
+  if (pathname.startsWith("/login") || pathname.startsWith("/api/login")) {
+    // If they already have a cookie and try to visit /login, bounce them to Dashboard
+    if (authCookie && pathname === "/login") {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 2. If there is NO cookie, deny access completely
+  if (!authCookie) {
+    // If someone tries to access raw data via API, send a 401 Unauthorized error
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    // If they try to access a page like /clubs or /, redirect to the login screen
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If they are already logged in and try to visit the login page, redirect to home
-  if (authCookie && isLoginPage) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
+  // 3. If they have a cookie and are not on the login page, let them through
   return NextResponse.next();
 }
 
 export const config = {
-  // Apply this lock to the homepage and the class upload API
-  matcher: ["/", "/api/upload-class"],
+  // Apply this lock to ALL routes except background Next.js files
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
